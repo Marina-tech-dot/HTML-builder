@@ -78,92 +78,39 @@ const cssBundle = async () => {
 
 const htmlTemplates = async () => {
   const pathToFolder = path.dirname(__filename);
+  const pathTempl = path.join(pathToFolder, "template.html");
   const pathToTemplates = path.join(__dirname, 'components');
-  const pathToNewTempl = path.join(root, 'template.html' );
   const pathToNewHTML = path.join(root, 'index.html' );
 
   try {
     let HTMLFiles = await readdir(pathToTemplates);
-    HTMLFiles = HTMLFiles.map((file) => file.match(/([\w,\s-]+)\.[A-Za-z]{3}/)[1]);
+    HTMLFiles = HTMLFiles.map(
+      (file) => file.match(/([\w,\s-]+)\.[A-Za-z]{3}/)[1]
+    );
 
-    // if (FS.existsSync(pathToNewHTML)) {
-    //   await fs.unlink(pathToNewHTML)
-    // } 
-      await copyFile("template.html", pathToFolder, root)
-      // await fs.rename(pathToNewTempl, pathToNewHTML, (err) => {
-      //   if (err) console.log("Problems with rename template to index");
-      // });
+      let newHTML = FS.readFileSync(pathTempl, "utf8");
 
-    // const HTMLValues = {};
+        HTMLFiles.forEach((templName) => {
+          const pathToTemplName = path.join(
+            pathToTemplates,
+            templName + ".html"
+          );
 
-    // HTMLFiles.forEach((templName) => (HTMLValues[templName] = templName));
-
-    //   HTMLFiles.forEach(async (templName) => {
-    //     const pathToTemplName = path.join(
-    //       pathToTemplates,
-    //       templName + ".html"
-    //     );
-
-    //     const templText = fs.readFile(
-    //       pathToTemplName,
-    //       "utf-8",
-    //       function (err, data) {
-    //         console.log(data)
-    //         if (err) throw err;
-    //         HTMLValues[`${templName}`] = data;
-    //         // return data;
-    //       }
-    //     );
-
-    //     return templText
-    //     HTMLValues[`${templName}`] = templText;
-
-    //     // templText.then((data) => {
-    //     //   HTMLValues[`${templName}`] = data;
-    //     // });
-    //   });
-
-
-    // console.log(HTMLValues);
-
-    
-
-
-
-
-    const newHTML = FS.readFileSync(
-        pathToNewTempl,
-        "utf8",
-        function (err, content) {
-          if (err) console.log(err)
-
-          HTMLFiles.forEach(async (templName) => {
-            const pathToTemplName = path.join(
-              pathToTemplates,
-              templName + ".html"
-            );
-
-            const templText = fs.readFile(
+            let templText = FS.readFileSync(
               pathToTemplName,
               "utf-8",
-              function (err, data) {
-                if (err) throw err;
-                return data;
-              }
             );
 
-            templText.then((data) => {
-              content = content.replace(`{{${templName}}}`, data);
-            });
+            newHTML = newHTML.replace(`{{${templName}}}`, templText);
+
           });
-        }
-      );
 
-      // FS.writeFile(pathToNewHTML, newHTML, (err) => console.log(err));
-      // await fs.unlink(pathToNewTempl);
 
-} catch(err) {
-    console.log('Problems with html templates')
+        FS.writeFile(pathToNewHTML, newHTML, { flag: "w+" }, (err) => { 
+        if (err) throw err;
+      });
+  } catch(err) {
+    console.log(err, 'Problems with html templates')
   }
 }
 
