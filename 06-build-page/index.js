@@ -49,28 +49,28 @@ const copyFile = async(file, pathToCopy, pathToSource) => {
 
 const cssBundle = async () => {
   const pathToCSS = path.join(__dirname, 'styles')
-  const pathToBundleCss = path.join(root, 'styles.css' );
+  const pathToBundleCss = path.join(root, 'style.css' );
 
   try {
     const cssFiles = await readdir(pathToCSS, {
       withFileTypes: true,
     });
 
-    cssFiles.forEach( async(file) => {
+    let styles = ''
+
+    cssFiles.forEach((file) => {
       const pathToFile = path.join(pathToCSS, file.name);
       const ext = path.extname(pathToFile)
 
       if (ext === ".css" && file.isFile()) {
-        const stream = FS.createReadStream(pathToFile, "utf-8");
-        let data = "";
-        stream.on("data", (chunk) => (data += chunk));
-        stream.on("end", () => {
-          fs.appendFile(pathToBundleCss, data, (err) => {
-            if (err) console.log(err, "Some problems with bundle.css");
-          });
-        });
+        const stream = FS.readFileSync(pathToFile, "utf-8");
+        styles += stream
       }
   })
+  
+      FS.writeFile(pathToBundleCss, styles, { flag: "w+" }, (err) => {
+        if (err) throw err;
+      });
   } catch (err) {
     console.log(err, 'Copying is not accessible')
   }
@@ -113,9 +113,6 @@ const htmlTemplates = async () => {
     console.log(err, 'Problems with html templates')
   }
 }
-
-
-
 
 
 
