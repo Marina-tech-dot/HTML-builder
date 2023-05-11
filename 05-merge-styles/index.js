@@ -1,33 +1,46 @@
-const FS = require('fs');
 const path = require('path');
-const { readdir } = require('node:fs/promises');
+const fs = require('node:fs/promises');
+const FS = require('fs');
 
 const pathToCSS = path.join(__dirname, 'styles');
 const pathToSource = path.join(__dirname, 'project-dist');
 const pathToBundleCss = path.join(pathToSource, 'bundle.css');
 
+const stylesArr = [];
 
 (async() => {
   try {
-    const cssFiles = await readdir(pathToCSS, {
+    const cssFiles = await fs.readdir(pathToCSS, {
       withFileTypes: true,
     });
 
-    let styles = "";
-
     cssFiles.forEach( async(file) => {
       const pathToFile = path.join(pathToCSS, file.name);
-      const ext = path.extname(pathToFile)
+      const ext = path.extname(pathToFile);
 
-      if (ext === ".css" && file.isFile()) {
-        const stream = FS.readFileSync(pathToFile, "utf-8");
-        styles += stream;
+      if(file.isFile()) {
+        if (ext === '.css' && file.isFile()) {
+          const stream = FS.createReadStream(pathToFile, 'utf-8');
+          stream.on('data', chunk => stylesArr.push(chunk));
+          stream.on('end', () => {
+            fs.writeFile(pathToBundleCss, '', (err) => {
+              if (err) throw err;
+            });
+
+            stylesArr.forEach(item => {
+              fs.appendFile(
+                pathToBundleCss,
+                item,
+                (err) => {
+                  if (err) throw err;
+                }    
+              );
+            });
+          });
+        }
       }
-  })
-    FS.writeFile(pathToBundleCss, styles, { flag: "w+" }, (err) => {
-      if (err) throw err;
     });
   } catch (err) {
-    console.log(err, 'Copying is not accessible')
+    console.log(err, 'Copying is not accessible');
   }
-})()
+})();
